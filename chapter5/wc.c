@@ -1,32 +1,38 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-static void do_cat(const char *path);
-static void do_cat_stdin();
+static int do_wc(const char *path);
 static void die(const char *s);
 
 int main(int argc, char *argv[]) {
   int i;
+  int c;
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
-      do_cat(argv[i]);
+      c = do_wc(argv[i]);
     }
   } else {
-    do_cat_stdin();
+    exit(1);
   }
+  printf("%d\n", c);
   exit(0);
 }
 
 #define BUFFER_SIZE 2048
 
-static void do_cat(const char *path) {
+static int do_wc(const char *path) {
   int fd;
   unsigned char buf[BUFFER_SIZE];
+  unsigned char lf = '\n';
+  unsigned char nul = '\0';
   int n;
+  int i;
+  int k = 0;
 
   fd = open(path, O_RDONLY);
   if (fd < 0) die(path);
@@ -34,21 +40,17 @@ static void do_cat(const char *path) {
     n = read(fd, buf, sizeof buf);
     if (n < 0) die(path);
     if (n == 0) break;
-    if (write(STDOUT_FILENO, buf, n) < 0) die(path);
+    for (i = 0; i < sizeof buf; i++) {
+      if (buf[i] == nul) {
+        break;
+      }
+      if (buf[i] == lf) {
+        k++;
+      }
+    }
   }
   if (close(fd) < 0) die(path);
-}
-
-static void do_cat_stdin() {
-  unsigned char buf[BUFFER_SIZE];
-  int n;
-
-  for (;;) {
-    n = read(STDIN_FILENO, buf, sizeof buf);
-    if (n < 0) die("");
-    if (n == 0) break;
-    if (write(STDOUT_FILENO, buf, n) < 0) die("");
-  }
+  return k;
 }
 
 static void die(const char *s) {
