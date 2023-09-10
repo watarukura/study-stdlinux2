@@ -22,4 +22,5 @@ pre-commit:
         if type clang-format >/dev/null; then
           clang-format -i {staged_files}
         else
+          echo "install clang-format."
         fi
