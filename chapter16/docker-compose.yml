@@ -1,0 +1,14 @@
+---
+version: "3"
+
+services:
+  ubuntu:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: "ubuntu"
+    environment:
+      TZ: Japan
+    volumes:
+      - .:/root/workspace
+    working_dir: "/root/workspace"
