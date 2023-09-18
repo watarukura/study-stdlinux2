@@ -12,7 +12,7 @@
 #include <unistd.h>
 
 #define BLOCK_BUF_SIZE 64
-#define LINE_BUF_SIZE 64
+#define LINE_BUF_SIZE 1024
 #define TIME_BUF_SIZE 64
 #define SERVER_NAME "little_httpd"
 #define SERVER_VERSION "0.1"
@@ -289,7 +289,8 @@ static void not_implemented(struct HTTPRequest *req, FILE *out) {
   fprintf(out, "<title>501 Not Implemented</title>\r\n");
   fprintf(out, "<header>\r\n");
   fprintf(out, "<body>\r\n");
-  fprintf(out, "<p>The request mehtod %s is not implemented</p>\r\n", req->method);
+  fprintf(out, "<p>The request mehtod %s is not implemented</p>\r\n",
+          req->method);
   fprintf(out, "</body>\r\n");
   fprintf(out, "</html>\r\n");
   fflush(out);
@@ -365,6 +366,7 @@ static void output_common_header_fields(struct HTTPRequest *req, FILE *out,
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     fprintf(stderr, "Usage: %s <docroot>\n", argv[0]);
+    exit(1);
   }
   install_signal_handlers();
   service(stdin, stdout, argv[1]);
