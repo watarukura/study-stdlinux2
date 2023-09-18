@@ -11,12 +11,13 @@
 #include <time.h>
 #include <unistd.h>
 
-#define BLOCK_BUF_SIZE 64
-#define LINE_BUF_SIZE 1024
+#define BLOCK_BUF_SIZE 1024
+#define LINE_BUF_SIZE 4096
 #define TIME_BUF_SIZE 64
-#define SERVER_NAME "little_httpd"
+#define SERVER_NAME "littleHttpd"
 #define SERVER_VERSION "0.1"
-#define MAX_REQUEST_BODY_LENGTH 1024
+#define MAX_REQUEST_BODY_LENGTH (1024 * 1024)
+#define HTTP_MINOR_VERSION 0
 
 struct HTTPHeaderField {
   char *name;
@@ -131,11 +132,9 @@ static struct HTTPRequest *read_request(FILE *in) {
   req = xmalloc(sizeof(struct HTTPRequest));
   read_request_line(req, in);
   req->header = NULL;
-  h = read_header_field(in);
-  while (h->next != NULL) {
+  while ((h = read_header_field(in))) {
     h->next = req->header;
     req->header = h;
-    h = read_header_field(in);
   }
   req->length = content_length(req);
   if (req->length != 0) {
@@ -358,6 +357,7 @@ static void output_common_header_fields(struct HTTPRequest *req, FILE *out,
   tm = gmtime(&t);
   if (!tm) log_exit("gmtime() failed: %s", strerror(errno));
   strftime(buf, TIME_BUF_SIZE, "%a, %d %b %Y %H:%M:%S GMT", tm);
+  fprintf(out, "HTTP/1.%d %s\r\n", HTTP_MINOR_VERSION, status);
   fprintf(out, "Date: %s\r\n", buf);
   fprintf(out, "Server: %s%s\r\n", SERVER_NAME, SERVER_VERSION);
   fprintf(out, "Connection: close\r\n");
